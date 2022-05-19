@@ -29,7 +29,7 @@ function preload() {
 
 function setup() {
     //size(280, 335);
-    
+
   createCanvas(280, 430);
   gameSetup();
 }//setup
@@ -41,8 +41,30 @@ function draw() {
 }//draw
 
 function keyPressed() {
+  keyAction(key);
+}//keyPressed
+
+function mousePressed() {
+  var c = getKey(mouseX, mouseY, 22, 5, 2, 345);
+  print(c);
+  //println(c);
+  if ((c >= 'a' && c <= 'z') ||
+      c == BACKSPACE || c == ENTER) {
+    print("mouse!");
+
+    keyAction(c);
+  }
+}
+
+function keyAction(key) {
+  if (keyCode == BACKSPACE) {
+    key = 8;
+  }
+  else if (keyCode == ENTER) {
+    key = 13;
+  }
   if (playing) {
-    if (keyCode == BACKSPACE && guessChars > 0) {
+    if (key == 8 && guessChars > 0) {
       guessChars--;
       guess = guess.substring(0, guessChars);
       grid.setTempWord(guess.toUpperCase());
@@ -52,7 +74,7 @@ function keyPressed() {
       grid.setTempWord(guess.toUpperCase());
       guessChars++;
     }
-    if ( keyCode == ENTER && guessChars == WORD_SIZE ) {
+    if ( key == 13 && guessChars == WORD_SIZE ) {
       if (engine.validWord(guess.toLowerCase())) {
         grid.addGuess(guess.toUpperCase());
         var result = engine.generateResult(guess.toUpperCase());
@@ -85,7 +107,7 @@ function keyPressed() {
       }
     }
       if (guesses == MAX_GUESSES) {
-	  
+
       playing = false;
     }
   }//playing
@@ -94,8 +116,7 @@ function keyPressed() {
       gameSetup();
     }
   }//not playing
-}//keyPressed
-
+}
 
 function gameSetup() {
   var guess_words = split(guessText, ",");
@@ -122,11 +143,13 @@ function contains(s, t) {
 
 function drawKeyboard(keysize,  offset, startx, starty) {
   var keyboard = ["QWERTYUIOP","ASDFGHJKL","ZXCVBNM"];
-
+  var oldstartx = startx + offset;
+  var y = starty;
+  var x = startx;
   for (var r=0; r<keyboard.length; r++) {
-    var y = starty + offset + r * (keysize+offset);
+    y = starty + offset + r * (keysize+offset);
     for (var k=0; k < keyboard[r].length; k++) {
-      var x = startx + offset + k*(keysize+offset);
+      x = startx + offset + k*(keysize+offset);
 
       var letter = keyboard[r].substring(k, k+1);
 	if (contains(matches, letter)) {
@@ -145,12 +168,56 @@ function drawKeyboard(keysize,  offset, startx, starty) {
       fill(0);
       textAlign(LEFT, TOP);
       textSize(keysize-offset);
-      text(letter, x+offset, y);
+      text(letter, x+offset, y+2);
     }
-    startx+= (r+1)*(keysize)/2 + offset;
+    if (r < 2) {
+      startx+= (r+1)*(keysize)/2 + offset;
+    }
   }//keybaord row draw
-
+  //functional buttons
+  textAlign(LEFT, TOP);
+  textSize(keysize-offset*2);
+  //backspace
+  fill(255);
+  rect(oldstartx, y, (startx-oldstartx), keysize);
+  fill(0);
+  text("DEL", oldstartx+offset, y+2);
+  //enter
+  fill(255);
+  rect((x+keysize+offset), y, (width-(x+keysize)-offset*2), keysize);
+  fill(0);
+  text("ENT", x+keysize+offset*2, y+2);
 }//drawKeyboard
+
+function getKey(mx, my, keysize, offset, startx, starty) {
+  var keyboard = ["qwertyuiop","asdfghjkl","zxcvbnm"];
+  var oldstartx = startx + offset;
+  var y = starty;
+  var x = startx;
+  for (var r=0; r<keyboard.length; r++) {
+    y = starty + offset + r * (keysize+offset);
+    for (var k=0; k < keyboard[r].length; k++) {
+      x = startx + offset + k*(keysize+offset);
+
+      if (x <= mx && x+keysize >= mx &&
+          y <= my && y+keysize >= my) {
+            return keyboard[r].substring(k, k+1);
+          }
+    }
+    if (r < 2) {
+      startx+= (r+1)*(keysize)/2 + offset;
+    }
+  }
+  if (oldstartx <= mx && startx >= mx &&
+      y <= my && y+keysize >= my) {
+        return BACKSPACE;
+      }//delete
+  if ((x+keysize) <= mx && width-offset >= mx &&
+      y <= my && y+keysize >= my) {
+        return ENTER;
+      }//enter
+  return '-';
+}//getKey
 
 //WordleEngine
 var POSITION_MATCH = 'G';
@@ -283,10 +350,10 @@ class WordleGrid {
         textAlign(LEFT, TOP);
         textSize(space_size-offset*2);
         if (w < this.guessesMade) {
-          text( this.guesses[w].charAt(c), x+offset*2, y );
+          text( this.guesses[w].charAt(c), x+offset*2, y+5 );
         }//add character
         else if ( w == this.guessesMade && c < this.tempWord.length ) {
-          text( this.tempWord.charAt(c), x+offset*2, y );
+          text( this.tempWord.charAt(c), x+offset*2, y+5);
         }
       }
     }
