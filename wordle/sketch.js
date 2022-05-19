@@ -28,9 +28,9 @@ function preload() {
 */
 
 function setup() {
-    //size(280, 335);
+    //size(280, 430);
 
-  createCanvas(280, 430);
+  createCanvas(windowWidth, 430);
   gameSetup();
 }//setup
 
@@ -184,7 +184,7 @@ function drawKeyboard(keysize,  offset, startx, starty) {
   text("DEL", oldstartx+offset, y+2);
   //enter
   fill(255);
-  rect((x+keysize+offset), y, (width-(x+keysize)-offset*2), keysize);
+  rect((x+keysize+offset), y, keysize * 2, keysize);
   fill(0);
   text("ENT", x+keysize+offset*2, y+2);
 }//drawKeyboard
@@ -212,7 +212,7 @@ function getKey(mx, my, keysize, offset, startx, starty) {
       y <= my && y+keysize >= my) {
         return BACKSPACE;
       }//delete
-  if ((x+keysize) <= mx && width-offset >= mx &&
+  if ((x+keysize) <= mx && x+keysize*2 >= mx &&
       y <= my && y+keysize >= my) {
         return ENTER;
       }//enter
