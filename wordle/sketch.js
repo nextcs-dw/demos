@@ -1,8 +1,11 @@
-var SPACE_SIZE = 50;
+var SPACE_SIZE_X = 65;
+var SPACE_SIZE_Y = 50;
 var OFFSET = 5;
 var WORD_SIZE = 5;
 var MAX_GUESSES = 6;
 
+var KEY_SIZE_X = 30;
+var KEY_SIZE_Y = 22;
 var GUESS_FILE = "words.csv";
 var TARGET_FILE = "words_reasonable.csv";
 var playing = true;
@@ -36,8 +39,11 @@ function setup() {
 
 function draw() {
   background(255);
-  grid.display(OFFSET, SPACE_SIZE);
-  drawKeyboard(22, 5, 2, 345);
+  grid.display(OFFSET, SPACE_SIZE_X, SPACE_SIZE_Y);
+  drawKeyboard(KEY_SIZE_X, KEY_SIZE_Y, 5, 2, 345);
+
+  noFill();
+  rect(0, 0, width, height);
 }//draw
 
 function keyPressed() {
@@ -45,7 +51,7 @@ function keyPressed() {
 }//keyPressed
 
 function mousePressed() {
-  var c = getKey(mouseX, mouseY, 22, 5, 2, 345);
+  var c = getKey(mouseX, mouseY, KEY_SIZE_X, KEY_SIZE_Y, 5, 2, 345);
   print(c);
   //println(c);
   if ((c >= 'a' && c <= 'z') ||
@@ -141,15 +147,15 @@ function contains(s, t) {
 }//contains
 
 
-function drawKeyboard(keysize,  offset, startx, starty) {
+function drawKeyboard(keysizex, keysizey,  offset, startx, starty) {
   var keyboard = ["QWERTYUIOP","ASDFGHJKL","ZXCVBNM"];
   var oldstartx = startx + offset;
   var y = starty;
   var x = startx;
   for (var r=0; r<keyboard.length; r++) {
-    y = starty + offset + r * (keysize+offset);
+    y = starty + offset + r * (keysizey+offset);
     for (var k=0; k < keyboard[r].length; k++) {
-      x = startx + offset + k*(keysize+offset);
+      x = startx + offset + k*(keysizex+offset);
 
       var letter = keyboard[r].substring(k, k+1);
 	if (contains(matches, letter)) {
@@ -164,56 +170,56 @@ function drawKeyboard(keysize,  offset, startx, starty) {
       else {
         noFill();
       }
-      square(x, y, keysize);
+      rect(x, y, keysizex, keysizey);
       fill(0);
       textAlign(LEFT, TOP);
-      textSize(keysize-offset);
+      textSize(keysizey-offset);
       text(letter, x+offset, y+2);
     }
     if (r < 2) {
-      startx+= (r+1)*(keysize)/2 + offset;
+      startx+= (r+1)*(keysizex)/2 + offset;
     }
   }//keybaord row draw
   //functional buttons
   textAlign(LEFT, TOP);
-  textSize(keysize-offset*2);
+  textSize(keysizey-offset*2);
   //backspace
   fill(255);
-  rect(oldstartx, y, (startx-oldstartx), keysize);
+  rect(oldstartx, y, (startx-oldstartx), keysizey);
   fill(0);
   text("DEL", oldstartx+offset, y+2);
   //enter
   fill(255);
-  rect((x+keysize+offset), y, keysize * 2, keysize);
+  rect((x+keysizex+offset), y, keysizex * 2, keysizey);
   fill(0);
-  text("ENT", x+keysize+offset*2, y+2);
+  text("ENT", x+keysizex+offset*2, y+2);
 }//drawKeyboard
 
-function getKey(mx, my, keysize, offset, startx, starty) {
+function getKey(mx, my, keysizex, keysizey, offset, startx, starty) {
   var keyboard = ["qwertyuiop","asdfghjkl","zxcvbnm"];
   var oldstartx = startx + offset;
   var y = starty;
   var x = startx;
   for (var r=0; r<keyboard.length; r++) {
-    y = starty + offset + r * (keysize+offset);
+    y = starty + offset + r * (keysizey+offset);
     for (var k=0; k < keyboard[r].length; k++) {
-      x = startx + offset + k*(keysize+offset);
+      x = startx + offset + k*(keysizex+offset);
 
-      if (x <= mx && x+keysize >= mx &&
-          y <= my && y+keysize >= my) {
+      if (x <= mx && x+keysizex >= mx &&
+          y <= my && y+keysizey >= my) {
             return keyboard[r].substring(k, k+1);
           }
     }
     if (r < 2) {
-      startx+= (r+1)*(keysize)/2 + offset;
+      startx+= (r+1)*(keysizex)/2 + offset;
     }
   }
   if (oldstartx <= mx && startx >= mx &&
-      y <= my && y+keysize >= my) {
+      y <= my && y+keysizey >= my) {
         return BACKSPACE;
       }//delete
-  if ((x+keysize) <= mx && x+keysize*2 >= mx &&
-      y <= my && y+keysize >= my) {
+  if (x <= mx && x+keysizex*3 >= mx &&
+      y <= my && y+keysizey >= my) {
         return ENTER;
       }//enter
   return '-';
@@ -325,11 +331,11 @@ class WordleGrid {
     this.tempWord = t;
   }//setTempWord
 
-  display(offset, space_size) {
+  display(offset, space_size_x, space_size_y) {
     for (var w=0; w<6; w++) {
-      var y = offset + w*(space_size+offset);
+      var y = offset + w*(space_size_y+offset);
       for (var c=0; c < 5; c++) {
-        var x = offset + c*(space_size+offset);
+        var x = offset + c*(space_size_x+offset);
         if (w < this.resultsAvailable) {
           var r = this.results[w].charAt(c);
           if (r == POSITION_MATCH) {
@@ -345,10 +351,10 @@ class WordleGrid {
         else {
           fill(255);
         }
-        square(x, y, space_size);
+        rect(x, y, space_size_x, space_size_y);
         fill(0);
         textAlign(LEFT, TOP);
-        textSize(space_size-offset*2);
+        textSize(space_size_y-offset*2);
         if (w < this.guessesMade) {
           text( this.guesses[w].charAt(c), x+offset*2, y+5 );
         }//add character
