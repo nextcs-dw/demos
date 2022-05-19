@@ -5,7 +5,7 @@ var WORD_SIZE = 5;
 var MAX_GUESSES = 6;
 
 var KEY_SIZE_X = 30;
-var KEY_SIZE_Y = 22;
+var KEY_SIZE_Y = 30;
 var GUESS_FILE = "words.csv";
 var TARGET_FILE = "words_reasonable.csv";
 var playing = true;
@@ -33,14 +33,14 @@ function preload() {
 function setup() {
     //size(280, 430);
 
-  createCanvas(windowWidth, 430);
+  createCanvas(windowWidth, 455);
   gameSetup();
 }//setup
 
 function draw() {
   background(255);
   grid.display(OFFSET, SPACE_SIZE_X, SPACE_SIZE_Y);
-  drawKeyboard(KEY_SIZE_X, KEY_SIZE_Y, 5, 2, 345);
+  drawKeyboard(KEY_SIZE_X, KEY_SIZE_Y, 5, 7, 345);
 
   noFill();
   rect(0, 0, width, height);
@@ -51,7 +51,7 @@ function keyPressed() {
 }//keyPressed
 
 function mousePressed() {
-  var c = getKey(mouseX, mouseY, KEY_SIZE_X, KEY_SIZE_Y, 5, 2, 345);
+  var c = getKey(mouseX, mouseY, KEY_SIZE_X, KEY_SIZE_Y, 5, 7, 345);
   print(c);
   //println(c);
   if ((c >= 'a' && c <= 'z') ||
@@ -332,10 +332,11 @@ class WordleGrid {
   }//setTempWord
 
   display(offset, space_size_x, space_size_y) {
+    var startx = 10;
     for (var w=0; w<6; w++) {
       var y = offset + w*(space_size_y+offset);
       for (var c=0; c < 5; c++) {
-        var x = offset + c*(space_size_x+offset);
+        var x = startx + offset + c*(space_size_x+offset);
         if (w < this.resultsAvailable) {
           var r = this.results[w].charAt(c);
           if (r == POSITION_MATCH) {
