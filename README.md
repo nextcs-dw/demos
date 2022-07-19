@@ -7,6 +7,9 @@
   * [Circle Collision Game](growth/index.html)
   * [Fire Simulation](fire/index.html)
   * [Recursive Backtracking Maze Solver](maze/index.html)
+  * [Buble sort](bublesort/index.html)
+  * [Insertion sort](insertionsort/index.html)
+  * [Selection sort](selectionsort/index.html)
   * [Image Manipulation](images/index.html)
     * includes edge detection & seam carving
 * Spring Semester
