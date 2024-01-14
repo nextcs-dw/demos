@@ -1,15 +1,16 @@
 let pg;
-
+let cp;
 
 function setup() {
-  createCanvas(600, 600);
-  pg = new PaintGrid(3, 3, 200);
+  createCanvas(700, 600);
+  pg = new PaintGrid(3, 3, 200, 200, 0);
+  cp = new ColorPicker(0, 0, 200, 600, 12);
 }//setup
 
 function draw() {
   background(0);
   pg.display();
-
+  cp.display();
 }//draw
 
 function keyPressed() {
@@ -18,22 +19,33 @@ function keyPressed() {
   }
 }//keyPressed
 
+function mouseClicked() {
+  if (mouseX <200) {
+    cp.pickColor(mouseX, mouseY);
+  }
+}//
 function mouseDragged() {
-  pg.addPoint(mouseX, mouseY);
+  if (mouseX >= 200) {
+    pg.addPoint(mouseX, mouseY);
+  }
 }//mouseDragged
 
 function mouseReleased() {
-  pg.endLine();
+  if (mouseX >= 200) {
+    pg.endLine();
+  }
 }//mouseReleased
 
 function mousePressed() {
-  pg.startLine(mouseX, mouseY);
+  if (mouseX >= 200) {
+    pg.startLine(mouseX, mouseY, cp.getColor());
+  }
 }//mousePressed
 
 
 class PaintGrid {
 
-  constructor(nr, nc, bs) {
+  constructor(nr, nc, bs, cx, cy) {
 
     this.numRows = nr;
     this.numCols = nc;
@@ -41,6 +53,7 @@ class PaintGrid {
     this.grid = new Array(this.numRows);
     this.resetGrid();
     this.selected = null;
+    this.corner = createVector(cx, cy);
   }//constructor
 
   resetGrid() {
@@ -54,16 +67,22 @@ class PaintGrid {
   }//resetGrid
 
   display() {
+    push();
+    translate(this.corner.x, this.corner.y);
     for (var r=0; r < this.grid.length; r++) {
       for (var c=0; c < this.grid[r].length; c++) {
         this.grid[r][c].display(false);
       }
     }
+    pop();
   }//display();
 
 
   addPoint(x, y) {
     let b = this.getBlockFromXY(x, y);
+
+    x = Math.trunc(x - this.corner.x);
+    y = Math.trunc(y - this.corner.y);
 
     let xc = Math.trunc(x / this.blockSize);
     let yr = Math.trunc(y / this.blockSize);
@@ -96,7 +115,7 @@ class PaintGrid {
 
       //this part works fine
       this.endLine();
-      this.startLine(x, y);
+      this.startLine(x, y, prevLine.penColor);
       this.selected = b;
 
       if (abs(prev.x - x) >= this.blockSize/2) {
@@ -129,7 +148,7 @@ class PaintGrid {
     }
   }//addPointToAll
 
-  startLine(x, y) {
+  startLine(x, y, co) {
     this.selected = this.getBlockFromXY(x, y);
     if (this.selected == null) {
       this.endLine();
@@ -138,7 +157,7 @@ class PaintGrid {
 
     for (var r=0; r < this.grid.length; r++) {
       for (var c=0; c < this.grid[r].length; c++) {
-        this.grid[r][c].startLine();
+        this.grid[r][c].startLine(co);
       }
     }
   }//startLine
@@ -153,8 +172,8 @@ class PaintGrid {
   }//endLine
 
   getBlockFromXY(x, y) {
-    x = Math.trunc(x / this.blockSize);
-    y = Math.trunc(y / this.blockSize);
+    x = Math.trunc((x-this.corner.x) / this.blockSize);
+    y = Math.trunc((y-this.corner.y) / this.blockSize);
     if (y >= this.grid.length || x >= this.grid[0].length ||
         y < 0 || x < 0) {
       return null;
@@ -200,8 +219,8 @@ class PaintBlock {
     this.lines[this.lines.length-1].addPoint(x, y);
   }//addPoint
 
-  startLine() {
-    this.lines.push(new PaintLine());
+  startLine(c) {
+    this.lines.push(new PaintLine(c));
   }
   endLine() {
     this.lines[this.lines.length-1].endLine();
@@ -211,8 +230,8 @@ class PaintBlock {
 
 class PaintLine {
 
-  constructor() {
-    this.penColor = color(0);
+  constructor(c) {
+    this.penColor = c;
     this.points = [];
   }//constructor
 
@@ -235,3 +254,72 @@ class PaintLine {
     this.points.push(this.points[this.points.length-1]);
   }//endLine
 }//PaintLine
+
+class ColorPicker {
+
+  constructor(x, y, pw, ph, numColors) {
+    this.corner = createVector(x, y);
+    this.pickWidth = pw;
+    this.pickHeight = ph;
+    this.colors = new Array(numColors);
+    this.paintSize = height/ (numColors/2);
+    this.populateColors();
+    this.selectedColor = 1;
+  }//constructor
+
+  display() {
+    strokeWeight(1);
+    fill(150);
+    rect(this.corner.x, this.corner.y, this.pickWidth, this.pickHeight);
+
+    fill(255);
+    let x = int(this.corner.x) + this.paintSize/2;
+    let y = int(this.corner.y) + this.paintSize/2;
+    for (let c=0; c < this.colors.length; c+=2) {
+      fill(this.colors[c]);
+      circle(x, y, this.paintSize);
+      if (c == this.selectedColor) {
+        fill(255);
+        noStroke();
+        circle(x, y, 10);
+        stroke(0);
+      }
+      x+= this.paintSize;
+      fill(this.colors[c+1]);
+      circle(x, y, this.paintSize);
+      if (c+1 == this.selectedColor) {
+        fill(255);
+        noStroke();
+        circle(x, y, 10);
+        stroke(1);
+      }
+      x = int(this.corner.x) + this.paintSize/2;
+      y+= this.paintSize;
+    }//color circles
+  }//display
+
+  populateColors() {
+    this.colors[0] = color(255);
+    this.colors[1] = color(0);
+    this.colors[2] = color(255, 0, 0);
+    this.colors[3] = color(255, 127, 0);
+    this.colors[4] = color(255, 255, 0);
+    this.colors[5] = color(127, 255, 0);
+    this.colors[6] = color(0, 255, 0);
+    this.colors[7] = color(0, 255, 127);
+    this.colors[8] = color(0, 255, 255);
+    this.colors[9] = color(0, 127, 255);
+    this.colors[10] = color(0, 0, 255);
+    this.colors[11] = color(127, 0, 255);
+  }//populateColors
+
+  pickColor(x, y) {
+    this.selectedColor =int(y/this.paintSize)*2 + int(x/this.paintSize);
+    //println(x / paintSize + " " + y / paintSize + " " + index);
+  }//pickColor
+
+  getColor() {
+    return this.colors[this.selectedColor];
+  }//getColor
+
+}//ColorPicker
