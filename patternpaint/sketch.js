@@ -40,6 +40,9 @@ function mousePressed() {
   if (mouseX >= 200) {
     pg.startLine(mouseX, mouseY, cp.getColor());
   }
+  else {
+    cp.pickColor(mouseX, mouseY);
+  }
 }//mousePressed
 
 
