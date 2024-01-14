@@ -72,10 +72,52 @@ class PaintGrid {
     y = y - (yr*this.blockSize);
 
     if (b != this.selected) {
+
+      let prevLine = this.selected.lines[this.selected.lines.length-1];
+      let prev = prevLine.points[prevLine.points.length-1];
+
+      //check if the border crossing is x
+      if (abs(prev.x - x) >= this.blockSize/2) {
+        if ( prev.x > x ) {
+          this.addPointToAll(this.blockSize-1, y);
+        }
+        else if ( prev.x < x) {
+          this.addPointToAll(0, y);
+        }
+      }
+      else {
+        if (prev.y > y) {
+          this.addPointToAll(x, this.blockSize-1);
+        }
+        else if (prev.y < y) {
+          this.addPointToAll(x, 0);
+        }
+      }
+
+      //this part works fine
       this.endLine();
       this.startLine(x, y);
       this.selected = b;
-    }
+
+      if (abs(prev.x - x) >= this.blockSize/2) {
+        if ( prev.x > x ) {
+          this.addPointToAll(0, y);
+        }
+        else if (prev.x < x ) {
+          this.addPointToAll(this.blockSize-1, y);
+        }
+      }
+      else {
+        if (prev.y > y) {
+          this.addPointToAll(x, 0);
+        }
+        else if (prev.y < y) {
+          this.addPointToAll(x, this.blockSize-1);
+        }
+      }
+    }//border crossing
+
+
     this.addPointToAll(x, y);
   }//addPoint
 
@@ -132,8 +174,13 @@ class PaintBlock {
   }//constructor
 
   display(viewGrid) {
-    if (!viewGrid)
+    if (!viewGrid) {
       noStroke();
+    }
+    else {
+      strokeWeight(1);
+    }
+
     fill(this.defBackground);
     square(this.corner.x, this.corner.y, this.length);
 
@@ -171,6 +218,7 @@ class PaintLine {
 
   drawPoints() {
     stroke(this.penColor);
+    strokeWeight(3);
     for (let i=0; i<this.points.length-1; i++) {
       //print(this.points[i]);
       line(this.points[i].x, this.points[i].y,
