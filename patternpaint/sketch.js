@@ -2,7 +2,7 @@ let pg;
 let cp;
 
 function setup() {
-  createCanvas(700, 600);
+  createCanvas(800, 600);
   pg = new PaintGrid(3, 3, 200, 200, 0);
   cp = new ColorPicker(0, 0, 200, 600, 12);
 }//setup

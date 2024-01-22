@@ -22,7 +22,12 @@
 
 <body>
   <div style="width:20%">
-  <h3>Instructions</h3>
+
+  <h3>Controls</h3>
+  <button onclick="convertToImage()">save</button>
+  <br />
+  <button onclick="setup()">clear</button>
+
   <!--
   <ul>
     <li>Any keypress will start fire spread.</li>
@@ -36,6 +41,34 @@
 
   <!-- Prevent scrolling on cavas maybe -->
   <script>
+
+    function convertToImage() {
+      // Get the canvas element
+      const canvas = document.getElementById('defaultCanvas0');
+      const context = canvas.getContext('2d');
+      //get image area of canvas
+      let imageData = context.getImageData(400, 0, 1200, 1200);
+
+      const canvas1 = document.createElement("canvas");
+      canvas1.width = 1200;
+      canvas1.height = 1200;
+      let ctx1 = canvas1.getContext("2d");
+      ctx1.putImageData(imageData, 0, 0);
+
+      const image = new Image();
+      // Assign the canvas content as the source of the image
+     image.src = canvas1.toDataURL();
+
+     // Create a temporary link element to download the image
+     const link = document.createElement('a');
+     link.href = image.src;
+     link.download = 'canvas_image.png';
+
+     // Trigger the link programmatically to start the download
+     link.click();
+   }//convertToImage
+
+
     document.body.addEventListener("touchstart", function (e) {
       if (e.target == canvas) {
           e.preventDefault();
