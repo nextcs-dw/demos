@@ -378,7 +378,7 @@ class Population {
       }
       else {
         var p0 = this.select();
-        var p1 = this.select();
+        var p1 = this.tournamentSelect();
         var child = p0.mate(p1);
         child.mutate(this.mutationRate);
         nextGeneration.pop[p] = child;
