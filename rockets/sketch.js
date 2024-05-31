@@ -9,22 +9,25 @@ var moving;
 var continuous;
 var moves;
 var generationCount;
+var tourney;
 
 function setup() {
   createCanvas(800, 400);
   popu = new Population(POP_SIZE);
   popreset();
   continuous = true;
+  tourney = false;
 }//setup
 
 function draw() {
   background(255);
+  displayBlocks();
   if (moving && moves == NUM_MOVES) {
     moving = false;
     popu.setFitness(target);
-    print("Generation " + generationCount);
-    print("Best fitness: " + popu.getBestFitness());
-    print("Avg  fitness: " + popu.getAvgFitness());
+    // print("Generation " + generationCount);
+    // print("Best fitness: " + popu.getBestFitness());
+    // print("Avg  fitness: " + popu.getAvgFitness());
     moves++;
   }
   if (continuous ) {
@@ -32,20 +35,20 @@ function draw() {
       moves++;
     }
     if (moves == NUM_MOVES + 60) {
-      popu = popu.matingSeason(true);
+      popu = popu.matingSeason(true, tourney);
       moving = true;
       moves = 0;
       generationCount++;
     }
   }//continuous
   if (moving) {
-    popu.run(false, obstacles);
+    popu.run(false, obstacles, target);
     moves++;
   }
   else {
-    popu.display(false);
+    popu.display(true);
   }
-  displayBlocks();
+  displayStats();
 }//draw
 
 function popreset() {
@@ -93,15 +96,45 @@ function keyPressed() {
   if (key == 'p') {
     popreset();
   }
-  else if (key == 'm') {
+  else if (key == 'm' && !continuous) {
     popu = popu.matingSeason(true);
     moving = true;
     moves = 0;
     generationCount++;
   }
+  else if (key == 't') {
+    tourney = !tourney;
+  }
 }//keyPressed
 
+function displayStats() {
+  var ts = 15;
+  var offset = 2;
+  rectMode(CORNER);
+  fill(255);
+  stroke(0);
+  rect(0, 0, 200, 93);
 
+  fill(0);
+  textSize(ts);
+  textAlign(LEFT, TOP);
+  text("Generation: " + generationCount, offset, offset);
+  text("Best fitness: " + popu.getBestFitness().toFixed(7), offset, offset+ts);
+  text("Avg  fitness: " + popu.getAvgFitness().toFixed(7), offset, offset+ts*2);
+  text("Mutation rate: " + popu.mutationRate, offset, offset+ts*3);
+  var s = "Selection type: ";
+  if (tourney) {
+    s+= "tournament";
+  }
+  else {
+    s+= "roulette wheel";
+  }
+  text(s, offset, offset+ts*4);
+  var nm = (NUM_MOVES - moves) > 0 ? (NUM_MOVES - moves) : 0;
+  text("Moves left: " +nm, offset, offset+ts*5);
+}//displayStats
+
+//BLOCK CLASS
 var TARGET = 0;
 var OBSTACLE = 1;
 
@@ -208,6 +241,7 @@ class Individual {
     this.chromosome = new Array(CHROMOSOME_LENGTH);
     this.fitness = 0;
     this.hitObstacle = false;
+    this.hitTarget = false;
     this.c = color(0, 0, 0);
     this.phenotype = 0;
 
@@ -253,12 +287,14 @@ class Individual {
 
   setFitness(goal) {
     var d = dist(this.phenotype.position.x, this.phenotype.position.y, goal.x, goal.y);
-    //fitness = pow(1/d, 2);
-    this.fitness = 10/(10+d);
+    d = Math.pow(d, 2);
+    this.fitness = 10/(10+d) * 100;
+    if (this.hitTarget) {
+      fitness*= 2;
+    }
     if ( this.hitObstacle ) {
       this.fitness*= 0.1;
     }
-    //print(fitness);
   }//setFitness
 
   mutate(rate) {
@@ -270,8 +306,9 @@ class Individual {
     }
   }//mutate
 
-  run(showFitness, obstacles) {
+  run(showFitness, obstacles, goal) {
     this.hitObstacle = this.phenotype.run(obstacles);
+    this.hitTarget = goal.collide(this.phenotype);
     this.display(showFitness);
   }
 
@@ -283,7 +320,7 @@ class Individual {
       textSize(15);
       fill(0);
       textAlign(CENTER);
-      text(this.fitness, this.phenotype.position.x, this.phenotype.position.y);
+      text(this.fitness.toFixed(5), this.phenotype.position.x, this.phenotype.position.y);
     }
   }//display()
 
@@ -314,9 +351,9 @@ class Population {
     }
   }//randomPop
 
-  run(showFitness, obstacles) {
+  run(showFitness, obstacles, goal) {
     for (var p=0; p < this.numIndividuals; p++) {
-      this.pop[p].run(showFitness, obstacles);
+      this.pop[p].run(showFitness, obstacles, goal);
     }
   }//
 
@@ -365,7 +402,7 @@ class Population {
   }//tournamentSelect
 
 
-  matingSeason(keepBest) {
+  matingSeason(keepBest, tourney) {
     var nextGeneration = new Population( this.numIndividuals );
     var bestIndex = -1;
     if (keepBest) {
@@ -378,7 +415,11 @@ class Population {
       }
       else {
         var p0 = this.select();
-        var p1 = this.tournamentSelect();
+        var p1 = this.select();
+        if (tourney) {
+          p0 = this.tournamentSelect();
+          p1 = this.tournamentSelect();
+        }
         var child = p0.mate(p1);
         child.mutate(this.mutationRate);
         nextGeneration.pop[p] = child;
